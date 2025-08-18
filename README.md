@@ -99,6 +99,67 @@ async fn my_endpoint(&self) -> String {
 }
 ```
 
+The `#[http]` attribute supports intelligent routing with priority-based matching:
+
+```rust
+// Specific path handlers (highest priority)
+#[http(method = "GET", path = "/api/users")]
+fn list_users(&mut self) -> Vec<User> {
+    // Matches ONLY GET /api/users - no request body needed
+    self.users.clone()
+}
+
+#[http(method = "POST", path = "/api/users")]
+async fn create_user(&mut self, user: CreateUser) -> Result<User, String> {
+    // Matches POST /api/users with {"CreateUser": {...}} body
+    let new_user = User::from(user);
+    self.users.push(new_user.clone());
+    Ok(new_user)
+}
+
+// Dynamic method-only handlers (medium priority)
+#[http(method = "GET")]
+fn handle_get_fallback(&mut self) -> ApiResponse {
+    let path = get_path().unwrap_or_default();
+    match path.as_str() {
+        p if p.starts_with("/api/") => ApiResponse::new(&format!("API GET for {}", p)),
+        _ => ApiResponse::new("General GET handler")
+    }
+}
+
+#[http(method = "POST")]
+async fn handle_post_with_data(&mut self, data: PostData) -> Result<String, String> {
+    let path = get_path().unwrap_or_default();
+    // This handles POST to any path (except those with specific handlers)
+    // Expects {"HandlePostWithData": {...}} in request body
+    Ok(format!("Processed POST to {} with data", path))
+}
+
+// Ultimate fallback (lowest priority)
+#[http]
+fn handle_any_method(&mut self) -> Response {
+    let method = get_http_method().unwrap_or_default();
+    let path = get_path().unwrap_or_default();
+    Response::new(&format!("Catch-all: {} {}", method, path))
+}
+```
+
+**Supported Methods**: `GET`, `POST`, `PUT`, `DELETE`, `PATCH`, `HEAD`, `OPTIONS`
+
+##### Smart Routing System
+
+The framework uses intelligent priority-based routing that automatically chooses the best handler based on the request:
+
+###### **Priority Logic:**
+
+1. **Has Request Body** → Tries parameterized handlers first
+   - Deserializes body to determine the correct handler
+   - Falls back to parameter-less handlers if deserialization fails
+
+2. **No Request Body** → Tries parameter-less handlers first
+   - Routes based on path and method matching
+   - Never attempts body deserialization for performance
+
 #### Frontend API Calls
 Parameters must be sent as tuples for multi-parameter methods:
 ```typescript
