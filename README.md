@@ -219,7 +219,11 @@ Subsequent changes to the interface must follow this pattern as well: start in b
 
 Do NOT create the API.
 The API is machine generated.
-You create types that end up in the API by defining and using them in functions in the Rust backend "hyperapp"
+You create types that end up in the API by defining and using them in functions in the Rust backend "hyperapp".
+
+Never use `serde_json::json!` macro: always use real Rust types.
+Never manually serialize or deserialize when calling `send`, `send_rmp`, or in #[http], #[local], #[remote] methods.
+Use the real Rust types: the framework will handle serialization and deserialization.
 
 Do NOT write code: just create a detailed `IMPLEMENTATION_PLAN.md` that will be used by the implementor.
 The implementor will have access to `resources/` but will be working from `IMPLEMENTATION_PLAN.md`, so include all relevant context in the PLAN.
@@ -239,7 +243,11 @@ Subsequent changes to the interface must follow this pattern as well: start in b
 
 Do NOT create the API.
 The API is machine generated.
-You create types that end up in the API by defining and using them in functions in the Rust backend "hyperapp"
+You create types that end up in the API by defining and using them in functions in the Rust backend "hyperapp".
+
+Never use `serde_json::json!` macro: always use real Rust types.
+Never manually serialize or deserialize when calling `send`, `send_rmp`, or in #[http], #[local], #[remote] methods.
+Use the real Rust types: the framework will handle serialization and deserialization.
 
 Do not worry about serialization/deserialization when using `send` and `send_rmp` functions for p2p communication.
 Notice that this all happens within those functions: just take the rust types as args and return rust types as return values.
